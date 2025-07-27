@@ -267,18 +267,18 @@ stages:
     desc: "Exports ASTs of the parametric model programs resulting from truncating CGPM-CrossCat models."
     cmd:
       - >-
-        parallel ${parallel.flags}
+        bash -c "parallel ${parallel.flags}
         jsonschema --instance {} schemas/cgpm.json
-        :::: <(find data/cgpm/complete -type f)
+        :::: <(find data/cgpm/complete -type f)"
       - mkdir -p data/ast
       - >-
-        parallel ${parallel.flags}
+        bash -c "parallel ${parallel.flags}
         'python scripts/ast_export.py
         --metadata {}
         --data data/numericalized.csv
         --mapping-table data/mapping-table.edn
         --output data/ast/{/.}.edn'
-        :::: <(find data/cgpm/complete -type f)
+        :::: <(find data/cgpm/complete -type f)"
     params:
       - parallel.flags
     deps:
@@ -296,23 +296,25 @@ stages:
     cmd:
       - mkdir -p data/code
       - >-
-        parallel ${parallel.flags}
-        'clojure -X inferenceql.auto-modeling.code/pprint-string
-        :path \"{}\"
-        > data/code/{/.}.clj'
-        :::: <(find data/ast -type f)
+        bash -c "parallel ${parallel.flags}
+        'cat \"{}\" > data/code/{/.}.clj'
+        :::: <(find data/ast -type f)"
+        # replaced the following with the cat line:
+        #'clojure -X inferenceql.auto-modeling.code/pprint-string
+        #:path \"{}\"
+        #> data/code/{/.}.clj'
 
   sppl-import:
     desc: "Imports a Multi-Mix AST and exports it AS a sum-product network"
     cmd:
       - mkdir -p data/sppl/unmerged
       - >-
-        parallel ${parallel.flags}
+        bash -c "parallel ${parallel.flags}
         'python scripts/sppl_import.py
         --multi-mix-ast {}
         --max-number-views data/max-number-views.txt
         --output data/sppl/unmerged/{/.}.json'
-        :::: <(find data/ast -type f)
+        :::: <(find data/ast -type f)"
     params:
       - parallel.flags
     deps:
@@ -366,7 +368,7 @@ stages:
     cmd:
       - mkdir -p data/xcat/complete/
       - >-
-        parallel ${parallel.flags}
+        bash -c "parallel ${parallel.flags}
         'clojure -X inferenceql.auto-modeling.xcat/import
         :cgpm-json {}
         :data-csv data/ignored.csv
@@ -374,7 +376,7 @@ stages:
         :numericalized-csv data/numericalized.csv
         :schema-edn data/schema.edn
         > data/xcat/complete/{/.}.edn'
-        :::: <(find data/cgpm/complete -type f)
+        :::: <(find data/cgpm/complete -type f)"
     params:
       - parallel.flags
     deps:
