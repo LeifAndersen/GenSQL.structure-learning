@@ -84,73 +84,13 @@ stages:
       - data/numericalized.csv
       - data/mapping-table.edn
 
-  loom-schema:
-    cmd: >
-      clojure -X gensql.structure-learning.main/loom-schema
-      < data/schema.edn
-      > data/loom-schema.json
-    deps:
-      - data/schema.edn
-    outs:
-      - data/loom-schema.json
-
-  loom-ingest:
-    cmd: ./bin/loom_task ingest loom data/loom-schema.json data/numericalized.csv
-    deps:
-      - data/loom-schema.json
-      - data/numericalized.csv
-    outs:
-      - loom/ingest
-      - loom/query
-
-  loom-infer-config:
-    cmd: >
-      clojure -X gensql.structure-learning.main/infer-config
-      < params.yaml
-      > data/infer-config.json
-    params:
-      - loom.extra_passes
-      - seed
-    outs:
-      - data/infer-config.json
-
-  loom-infer:
-    cmd: ./bin/loom_task infer loom ${sample_count} data/infer-config.json
-    deps:
-      - loom/ingest
-      - loom/query
-      - data/infer-config.json
-    params:
-      - sample_count
-    outs:
-      - loom/samples
-
-  loom-dump-metadata:
-    cmd: >
-      mkdir -p data/cgpm/raw &&
-      find loom/samples -mindepth 1 -maxdepth 1 -type d |
-      parallel ${parallel.flags}
-      ./bin/loom python scripts/loom_dump.py {}
-      --output data/cgpm/raw/{/}.json
-    params:
-      - parallel.flags
-    deps:
-      - loom/samples
-      - scripts/loom_dump.py
-    outs:
-      - data/cgpm/raw
-
   cgpm-hydrate-metadata:
     cmd: >
-      find data/cgpm/raw -type f |
-      parallel jsonschema --instance {} schemas/cgpm.json &&
       mkdir -p data/cgpm/hydrated &&
       rm -f data/cgpm/inf.log &&
-      find data/cgpm/raw -type f |
-      sort |
+      seq 0 $((${sample_count} - 1)) |
       parallel ${parallel.flags}
       'python scripts/cgpm_hydrate.py
-      --metadata {}
       --output data/cgpm/hydrated/{/}
       --data data/numericalized.csv
       --schema data/cgpm-schema.edn
@@ -158,10 +98,10 @@ stages:
       --seed $((${seed} + {#} - 1))'
     params:
       - parallel.flags
+      - sample_count
       - seed
     deps:
       - data/cgpm-schema.edn
-      - data/cgpm/raw
       - data/mapping-table.edn
       - data/numericalized.csv
       - schemas/cgpm.json
@@ -326,18 +266,18 @@ stages:
     desc: "Exports ASTs of the parametric model programs resulting from truncating CGPM-CrossCat models."
     cmd:
       - >-
-        parallel ${parallel.flags}
+        bash -c "parallel ${parallel.flags}
         jsonschema --instance {} schemas/cgpm.json
-        :::: <(find data/cgpm/complete -type f)
+        :::: <(find data/cgpm/complete -type f)"
       - mkdir -p data/ast
       - >-
-        parallel ${parallel.flags}
+        bash -c "parallel ${parallel.flags}
         'python scripts/ast_export.py
         --metadata {}
         --data data/numericalized.csv
         --mapping-table data/mapping-table.edn
         --output data/ast/{/.}.edn'
-        :::: <(find data/cgpm/complete -type f)
+        :::: <(find data/cgpm/complete -type f)"
     params:
       - parallel.flags
     deps:
@@ -352,12 +292,12 @@ stages:
     cmd:
       - mkdir -p data/sppl/unmerged
       - >-
-        parallel ${parallel.flags}
+        bash -c "parallel ${parallel.flags}
         'python scripts/sppl_import.py
         --multi-mix-ast {}
         --max-number-views data/max-number-views.txt
         --output data/sppl/unmerged/{/.}.json'
-        :::: <(find data/ast -type f)
+        :::: <(find data/ast -type f)"
     params:
       - parallel.flags
     deps:
@@ -410,15 +350,15 @@ stages:
     cmd:
       - mkdir -p data/xcat/complete/
       - >-
-        parallel ${parallel.flags}
-        'clojure -X gensql.structure-learning.xcat/import
-        :cgpm-json {}
+        bash -c "parallel ${parallel.flags}
+        \"clojure -X gensql.structure-learning.xcat/import
+        :cgpm-json '\\\"{}\\\"'
         :data-csv data/ignored.csv
         :mapping-table data/mapping-table.edn
         :numericalized-csv data/numericalized.csv
         :schema-edn data/schema.edn
-        > data/xcat/complete/{/.}.edn'
-        :::: <(find data/cgpm/complete -type f)
+        > data/xcat/complete/{/.}.edn\"
+        :::: <(find data/cgpm/complete -type f)"
     params:
       - parallel.flags
     deps:

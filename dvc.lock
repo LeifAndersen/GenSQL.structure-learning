@@ -1,288 +1,183 @@
 schema: '2.0'
 stages:
   subsample:
-    cmd: "mkdir -p data/test && python scripts/subsample.py --data data/data.csv --test-data-dir\
-      \ data/test --params params.yaml --output data/subsampled.csv\n"
+    cmd: "mkdir -p data/test && python scripts/subsample.py --data data/data.csv --test-data-dir
+      data/test --params params.yaml --output data/subsampled.csv\n"
     deps:
     - path: data/data.csv
-      hash: md5
       md5: 2652c974be9aa49bd50061377d39563d
       size: 313452
     - path: scripts/subsample.py
-      hash: md5
       md5: e984c015340dc2e50d926b4e3931b9dd
       size: 1821
     params:
       params.yaml:
-        seed: 0
+        seed: 42
         sub_sample:
           N: 1000
     outs:
     - path: data/subsampled.csv
-      hash: md5
-      md5: 54da26f21f0fee6db642e1761ebe69b9
-      size: 268196
+      md5: 23395929f0d973d8568076238ff453d3
+      size: 269085
     - path: data/test
-      hash: md5
-      md5: b8d3099ce11e7976c280f51cf51cbb96.dir
-      size: 45938
+      md5: c999398358adfdcb184b07471c5aac32.dir
+      size: 45049
       nfiles: 2
   validate-column-names:
     cmd: bin/validate.sh
     deps:
     - path: data/subsampled.csv
-      hash: md5
-      md5: 54da26f21f0fee6db642e1761ebe69b9
-      size: 268196
+      md5: 23395929f0d973d8568076238ff453d3
+      size: 269085
     outs:
     - path: data/validated.csv
-      hash: md5
-      md5: 54da26f21f0fee6db642e1761ebe69b9
-      size: 268196
+      md5: 23395929f0d973d8568076238ff453d3
+      size: 269085
   nullify:
-    cmd: "clojure -X gensql.structure-learning.main/nullify < data/validated.csv >\
-      \ data/nullified.csv\n"
+    cmd: "clojure -X gensql.structure-learning.main/nullify < data/validated.csv >
+      data/nullified.csv\n"
     deps:
     - path: data/validated.csv
-      hash: md5
-      md5: 54da26f21f0fee6db642e1761ebe69b9
-      size: 268196
+      md5: 23395929f0d973d8568076238ff453d3
+      size: 269085
     params:
       params.yaml:
         nullify:
+        - NaN
+        - missing
     outs:
     - path: data/nullified.csv
-      hash: md5
-      md5: 54da26f21f0fee6db642e1761ebe69b9
-      size: 268196
+      md5: 23395929f0d973d8568076238ff453d3
+      size: 269085
   guess-schema:
-    cmd: "clojure -X gensql.structure-learning.main/guess-schema < data/nullified.csv\
-      \ > data/schema.edn\n"
+    cmd: "clojure -X gensql.structure-learning.main/guess-schema < data/nullified.csv
+      > data/schema.edn\n"
     deps:
     - path: data/nullified.csv
-      hash: md5
-      md5: 54da26f21f0fee6db642e1761ebe69b9
-      size: 268196
+      md5: 23395929f0d973d8568076238ff453d3
+      size: 269085
     params:
       params.yaml:
         schema:
+          Type_of_Orbit: nominal
+          Country_of_Contractor: ignore
+          Inclination_radians: numerical
+          Operator_Owner: ignore
+          Period_minutes: numerical
+          Dry_Mass_kg: numerical
+          Launch_Site: ignore
+          Country_of_Operator: ignore
+          Contractor: ignore
+          Purpose: nominal
+          Anticipated_Lifetime: numerical
+          Users: ignore
+          Date_of_Launch: ignore
+          Class_of_Orbit: nominal
+          Launch_Mass_kg: numerical
+          Launch_Vehicle: ignore
+          Source_Used_for_Orbital_Data: ignore
+          Eccentricity: numerical
+          longitude_radians_of_geo: ignore
+          Name: ignore
+          Perigee_km: numerical
+          Apogee_km: numerical
+          Power_watts: numerical
     outs:
     - path: data/schema.edn
-      hash: md5
-      md5: 50689cad3539b17cfc255d6dc2545e1c
-      size: 601
-  cgpm-schema:
-    cmd: "clojure -X gensql.structure-learning.main/cgpm-schema < data/schema.edn\
-      \ > data/cgpm-schema.edn\n"
-    deps:
-    - path: data/schema.edn
-      hash: md5
-      md5: 50689cad3539b17cfc255d6dc2545e1c
-      size: 601
-    outs:
-    - path: data/cgpm-schema.edn
-      hash: md5
-      md5: 7e6b6810bece6d68677b7f69b0a9bb6b
-      size: 186
+      md5: 4dd5666b5ed325c90c30ee2699c31b07
+      size: 625
   ignore:
     cmd: "clojure -X gensql.structure-learning.main/ignore :schema '\"data/schema.edn\"\
       ' < data/nullified.csv > data/ignored.csv\n"
     deps:
     - path: data/nullified.csv
-      hash: md5
-      md5: 54da26f21f0fee6db642e1761ebe69b9
-      size: 268196
+      md5: 23395929f0d973d8568076238ff453d3
+      size: 269085
     - path: data/schema.edn
-      hash: md5
-      md5: 50689cad3539b17cfc255d6dc2545e1c
-      size: 601
+      md5: 4dd5666b5ed325c90c30ee2699c31b07
+      size: 625
     outs:
     - path: data/ignored.csv
-      hash: md5
-      md5: 5ffeb41f4182b8f7f062b5f13230557d
-      size: 77540
+      md5: 746f90deb090321bfa790093a24a9d06
+      size: 85884
+  cgpm-schema:
+    cmd: "clojure -X gensql.structure-learning.main/cgpm-schema < data/schema.edn
+      > data/cgpm-schema.edn\n"
+    deps:
+    - path: data/schema.edn
+      md5: 4dd5666b5ed325c90c30ee2699c31b07
+      size: 625
+    outs:
+    - path: data/cgpm-schema.edn
+      md5: 82acdd78ba10b9b1203b039e1bbd6b1f
+      size: 325
   numericalize:
     cmd: "clojure -X gensql.structure-learning.main/numericalize :schema '\"data/schema.edn\"\
       ' :table data/mapping-table.edn < data/ignored.csv > data/numericalized.csv\n"
     deps:
     - path: data/ignored.csv
-      hash: md5
-      md5: 5ffeb41f4182b8f7f062b5f13230557d
-      size: 77540
+      md5: 746f90deb090321bfa790093a24a9d06
+      size: 85884
     - path: data/schema.edn
-      hash: md5
-      md5: 50689cad3539b17cfc255d6dc2545e1c
-      size: 601
+      md5: 4dd5666b5ed325c90c30ee2699c31b07
+      size: 625
     outs:
     - path: data/mapping-table.edn
-      hash: md5
-      md5: 1d3e7314f20a2b2d50deff70b323f428
-      size: 3210
+      md5: 21f032e2a4b3ccbbf146f2e6ee1115a2
+      size: 1465
     - path: data/numericalized.csv
-      hash: md5
-      md5: 345eaad4a50da45d1f4d50d326de0f2b
-      size: 11932
-  loom-schema:
-    cmd: "clojure -X gensql.structure-learning.main/loom-schema < data/schema.edn\
-      \ > data/loom-schema.json\n"
-    deps:
-    - path: data/schema.edn
-      hash: md5
-      md5: 50689cad3539b17cfc255d6dc2545e1c
-      size: 601
-    outs:
-    - path: data/loom-schema.json
-      hash: md5
-      md5: 68f027a12982e5d4f01f40fe0450b281
-      size: 127
-  loom-ingest:
-    cmd: ./bin/loom_task ingest loom data/loom-schema.json data/numericalized.csv
-    deps:
-    - path: data/loom-schema.json
-      hash: md5
-      md5: 68f027a12982e5d4f01f40fe0450b281
-      size: 127
-    - path: data/numericalized.csv
-      hash: md5
-      md5: 345eaad4a50da45d1f4d50d326de0f2b
-      size: 11932
-    outs:
-    - path: loom/ingest
-      hash: md5
-      md5: 442c82a1ca799f1a0a92ec930bf6fa9b.dir
-      size: 17782
-      nfiles: 7
-    - path: loom/query
-      hash: md5
-      md5: 6e16965d6127bf5d755ebfb8b4f558c2.dir
-      size: 106
-      nfiles: 1
-  loom-infer-config:
-    cmd: "clojure -X gensql.structure-learning.main/infer-config < params.yaml > data/infer-config.json\n"
-    params:
-      params.yaml:
-        loom.extra_passes: 1
-        seed: 0
-    outs:
-    - path: data/infer-config.json
-      hash: md5
-      md5: 3781d3c543c1a1f8977a7d2ff1c4601c
-      size: 40
-  loom-infer:
-    cmd: ./bin/loom_task infer loom 3 data/infer-config.json
-    deps:
-    - path: data/infer-config.json
-      hash: md5
-      md5: 3781d3c543c1a1f8977a7d2ff1c4601c
-      size: 40
-    - path: loom/ingest
-      hash: md5
-      md5: 442c82a1ca799f1a0a92ec930bf6fa9b.dir
-      size: 17782
-      nfiles: 7
-    - path: loom/query
-      hash: md5
-      md5: 6e16965d6127bf5d755ebfb8b4f558c2.dir
-      size: 106
-      nfiles: 1
-    params:
-      params.yaml:
-        sample_count: 3
-    outs:
-    - path: loom/samples
-      hash: md5
-      md5: da9a3174280400cb1fd369db15678dd7.dir
-      size: 52543
-      nfiles: 22
-  loom-dump-metadata:
-    cmd: "mkdir -p data/cgpm/raw && find loom/samples -mindepth 1 -maxdepth 1 -type\
-      \ d | parallel --verbose ./bin/loom python scripts/loom_dump.py {} --output\
-      \ data/cgpm/raw/{/}.json\n"
-    deps:
-    - path: loom/samples
-      hash: md5
-      md5: da9a3174280400cb1fd369db15678dd7.dir
-      size: 52543
-      nfiles: 22
-    - path: scripts/loom_dump.py
-      hash: md5
-      md5: c43616fe12258e9314fe1b481a6971e8
-      size: 1978
-    params:
-      params.yaml:
-        parallel.flags: --verbose
-    outs:
-    - path: data/cgpm/raw
-      hash: md5
-      md5: e575cb2e33443ba82f8d4c450180a5bc.dir
-      size: 12284
-      nfiles: 3
+      md5: 3c360565634a4baecd5774f862a45bbe
+      size: 62634
   cgpm-hydrate-metadata:
-    cmd: "find data/cgpm/raw -type f | parallel jsonschema --instance {} schemas/cgpm.json\
-      \ && mkdir -p data/cgpm/hydrated && rm -f data/cgpm/inf.log && find data/cgpm/raw\
-      \ -type f | sort | parallel --verbose 'python scripts/cgpm_hydrate.py --metadata\
-      \ {} --output data/cgpm/hydrated/{/} --data data/numericalized.csv --schema\
-      \ data/cgpm-schema.edn --mapping-table data/mapping-table.edn --seed $((0 +\
-      \ {#} - 1))'\n"
+    cmd: "mkdir -p data/cgpm/hydrated && rm -f data/cgpm/inf.log && seq 0 $((3 - 1))
+      | parallel --verbose 'python scripts/cgpm_hydrate.py --output data/cgpm/hydrated/{/}
+      --data data/numericalized.csv --schema data/cgpm-schema.edn --mapping-table
+      data/mapping-table.edn --seed $((42 + {#} - 1))'\n"
     deps:
     - path: data/cgpm-schema.edn
-      hash: md5
-      md5: 7e6b6810bece6d68677b7f69b0a9bb6b
-      size: 186
-    - path: data/cgpm/raw
-      hash: md5
-      md5: e575cb2e33443ba82f8d4c450180a5bc.dir
-      size: 12284
-      nfiles: 3
+      md5: 82acdd78ba10b9b1203b039e1bbd6b1f
+      size: 325
     - path: data/mapping-table.edn
-      hash: md5
-      md5: 1d3e7314f20a2b2d50deff70b323f428
-      size: 3210
+      md5: 21f032e2a4b3ccbbf146f2e6ee1115a2
+      size: 1465
     - path: data/numericalized.csv
-      hash: md5
-      md5: 345eaad4a50da45d1f4d50d326de0f2b
-      size: 11932
+      md5: 3c360565634a4baecd5774f862a45bbe
+      size: 62634
     - path: schemas/cgpm.json
-      hash: md5
       md5: 75fb21013e98a73e03fbe1ace14426f2
       size: 4039
     - path: scripts/cgpm_hydrate.py
-      hash: md5
       md5: 0ad32ff550f8b45a3642bddf279c9664
       size: 2971
     params:
       params.yaml:
         parallel.flags: --verbose
-        seed: 0
+        sample_count: 3
+        seed: 42
     outs:
     - path: data/cgpm/hydrated
-      hash: md5
-      md5: f0b203a84011a47c6efc7ce8e411898e.dir
-      size: 125827
+      md5: 148799c62487aed444c4a0ef93f20cb6.dir
+      size: 605077
       nfiles: 3
   cgpm-infer-hyperparameters:
-    cmd: "find data/cgpm/hydrated -type f | parallel jsonschema --instance {} schemas/cgpm.json\
-      \ && mkdir -p data/cgpm/complete && echo 1 >> data/cgpm/inf.log && find data/cgpm/hydrated\
-      \ -type f | sort | parallel --verbose 'python scripts/cgpm_infer.py {} --kernel\
-      \ alpha --kernel view_alphas --kernel column_hypers --kernel rows --kernel columns\
-      \ --output data/cgpm/complete/{/} --data data/numericalized.csv --params params.yaml\
-      \ --seed $((0 + {#} - 1)) --minutes 1' #--iterations 1\n"
+    cmd: "find data/cgpm/hydrated -type f | parallel jsonschema --instance {} schemas/cgpm.json
+      && mkdir -p data/cgpm/complete && echo 1 >> data/cgpm/inf.log && find data/cgpm/hydrated
+      -type f | sort | parallel --verbose 'python scripts/cgpm_infer.py {} --kernel
+      alpha --kernel view_alphas --kernel column_hypers --kernel rows --kernel columns
+      --output data/cgpm/complete/{/} --data data/numericalized.csv --params params.yaml
+      --seed $((42 + {#} - 1)) --minutes 1' #--iterations 1\n"
     deps:
     - path: data/cgpm/hydrated
-      hash: md5
-      md5: f0b203a84011a47c6efc7ce8e411898e.dir
-      size: 125827
+      md5: 148799c62487aed444c4a0ef93f20cb6.dir
+      size: 605077
       nfiles: 3
     - path: data/numericalized.csv
-      hash: md5
-      md5: 345eaad4a50da45d1f4d50d326de0f2b
-      size: 11932
+      md5: 3c360565634a4baecd5774f862a45bbe
+      size: 62634
     - path: schemas/cgpm.json
-      hash: md5
       md5: 75fb21013e98a73e03fbe1ace14426f2
       size: 4039
     - path: scripts/cgpm_infer.py
-      hash: md5
       md5: 8c953870a8ac391bb77deeb105403131
       size: 4523
     params:
@@ -291,187 +186,29 @@ stages:
           iterations: 1
           minutes: 1
         parallel.flags: --verbose
-        seed: 0
+        seed: 42
     outs:
     - path: data/cgpm/complete
-      hash: md5
-      md5: b01aaee70e74d3ad3b3dcca27ab61313.dir
-      size: 117849
+      md5: 46ffed3ecdb6a5798cf22e6fa9a2ab2b.dir
+      size: 373891
       nfiles: 3
-  save-dependencies:
-    cmd: "find data/cgpm/complete -type f | sort | xargs python scripts/dep_prob.py\
-      \ --data data/numericalized.csv --output data/dep-prob.json\n"
-    deps:
-    - path: data/cgpm/complete
-      hash: md5
-      md5: b01aaee70e74d3ad3b3dcca27ab61313.dir
-      size: 117849
-      nfiles: 3
-    outs:
-    - path: data/dep-prob.json
-      hash: md5
-      md5: 03184adcfc0c6721bd5cdabef8098169
-      size: 774
-  save-max-number-views:
-    cmd: "find data/cgpm/complete -type f | xargs python scripts/save_n_views.py >>\
-      \ data/max-number-views.txt\n"
-    deps:
-    - path: data/cgpm/complete
-      hash: md5
-      md5: b01aaee70e74d3ad3b3dcca27ab61313.dir
-      size: 117849
-      nfiles: 3
-    outs:
-    - path: data/max-number-views.txt
-      hash: md5
-      md5: c4ca4238a0b923820dcc509a6f75849b
-      size: 1
-  dep-prob-vl:
-    cmd: "clojure -X gensql.structure-learning.heatmap/vega-lite :stats-path '\"data/dep-prob.json\"\
-      ' :domain '[0.0 1.0]' :default 1.0 :name '\"crosscat\"' :scheme '\"blues\"'\
-      \ > data/dep-prob.vl.json\n"
-    deps:
-    - path: data/dep-prob.json
-      hash: md5
-      md5: 03184adcfc0c6721bd5cdabef8098169
-      size: 774
-    - path: src/clojure/gensql/structure_learning/heatmap.clj
-      hash: md5
-      md5: 1a9cd1bb8a534431a3836ed066758616
-      size: 7364
-    outs:
-    - path: data/dep-prob.vl.json
-      hash: md5
-      md5: e8678ddc010f3b17c3d3d7ede9d09679
-      size: 2852
-  dep-prob-vg:
-    cmd: "pnpm vl2vg < data/dep-prob.vl.json > data/dep-prob.vg.json\n"
-    deps:
-    - path: data/dep-prob.vl.json
-      hash: md5
-      md5: e8678ddc010f3b17c3d3d7ede9d09679
-      size: 2852
-    outs:
-    - path: data/dep-prob.vg.json
-      hash: md5
-      md5: 90b6c1771e1d158da81074ad448005d8
-      size: 4675
-  dep-prob-svg:
-    cmd: "pnpm vg2svg < data/dep-prob.vg.json > data/dep-prob.svg\n"
-    deps:
-    - path: data/dep-prob.vg.json
-      hash: md5
-      md5: 90b6c1771e1d158da81074ad448005d8
-      size: 4675
-    outs:
-    - path: data/dep-prob.svg
-      hash: md5
-      md5: 0718cc6f9322663ea01449cf858ff65b
-      size: 13898
-  save-linear-stats:
-    cmd: "python scripts/linear_stats.py --data data/ignored.csv --schema data/schema.edn\
-      \ --output data/linear-stats.json\n"
-    deps:
-    - path: data/ignored.csv
-      hash: md5
-      md5: 5ffeb41f4182b8f7f062b5f13230557d
-      size: 77540
-    - path: data/schema.edn
-      hash: md5
-      md5: 50689cad3539b17cfc255d6dc2545e1c
-      size: 601
-    - path: scripts/linear_stats.py
-      hash: md5
-      md5: d5ebd4d1195a949b7c66ea7b77447f11
-      size: 4361
-    outs:
-    - path: data/linear-stats.json
-      hash: md5
-      md5: d5e5ecd37ebd8d5cd03c1bbd6a6fe7f6
-      size: 2899
-  linear-stats-vl:
-    cmd: "clojure -X gensql.structure-learning.heatmap/vega-lite :stats-path '\"data/linear-stats.json\"\
-      ' :sort-path '\"data/dep-prob.json\"' :domain '[1.0 0.0]' :default 0.0 :name\
-      \ '\"statistics\"' :field '\"p-value\"' :scheme '\"oranges\"' > data/linear-stats.vl.json\n"
-    deps:
-    - path: data/dep-prob.json
-      hash: md5
-      md5: 03184adcfc0c6721bd5cdabef8098169
-      size: 774
-    - path: data/linear-stats.json
-      hash: md5
-      md5: d5e5ecd37ebd8d5cd03c1bbd6a6fe7f6
-      size: 2899
-    - path: src/clojure/gensql/structure_learning/heatmap.clj
-      hash: md5
-      md5: 1a9cd1bb8a534431a3836ed066758616
-      size: 7364
-    outs:
-    - path: data/linear-stats.vl.json
-      hash: md5
-      md5: 1d564d040268106c284b268dd7618abd
-      size: 3489
-  linear-stats-vg:
-    cmd: "pnpm vl2vg < data/linear-stats.vl.json > data/linear-stats.vg.json\n"
-    deps:
-    - path: data/linear-stats.vl.json
-      hash: md5
-      md5: 1d564d040268106c284b268dd7618abd
-      size: 3489
-    outs:
-    - path: data/linear-stats.vg.json
-      hash: md5
-      md5: a7e6eba1560d847892d815d127e76d8a
-      size: 5381
-  linear-stats-svg:
-    cmd: "pnpm vg2svg < data/linear-stats.vg.json > data/linear-stats.svg\n"
-    deps:
-    - path: data/linear-stats.vg.json
-      hash: md5
-      md5: a7e6eba1560d847892d815d127e76d8a
-      size: 5381
-    outs:
-    - path: data/linear-stats.svg
-      hash: md5
-      md5: 7eb988a7222ad2519f5819f6ea22da85
-      size: 14507
-  compare-dep-prob-with-linear:
-    cmd: "python scripts/compare_deps.py --deps data/dep-prob.json --linear data/linear-stats.json\
-      \ >> data/qc-statistical-tests.txt\n"
-    deps:
-    - path: data/dep-prob.json
-      hash: md5
-      md5: 03184adcfc0c6721bd5cdabef8098169
-      size: 774
-    - path: data/linear-stats.json
-      hash: md5
-      md5: d5e5ecd37ebd8d5cd03c1bbd6a6fe7f6
-      size: 2899
-    outs:
-    - path: data/qc-statistical-tests.txt
-      hash: md5
-      md5: 0d13981f8869abf58feab894ba234aa2
-      size: 344
   ast-export:
     cmd:
-    - 'parallel --verbose jsonschema --instance {} schemas/cgpm.json :::: <(find data/cgpm/complete
-      -type f)'
+    - 'bash -c "parallel --verbose jsonschema --instance {} schemas/cgpm.json ::::
+      <(find data/cgpm/complete -type f)"'
     - mkdir -p data/ast
-    - "parallel --verbose 'python scripts/ast_export.py --metadata {} --data data/numericalized.csv\
-      \ --mapping-table data/mapping-table.edn --output data/ast/{/.}.edn' :::: <(find\
-      \ data/cgpm/complete -type f)"
+    - "bash -c \"parallel --verbose 'python scripts/ast_export.py --metadata {} --data
+      data/numericalized.csv --mapping-table data/mapping-table.edn --output data/ast/{/.}.edn'
+      :::: <(find data/cgpm/complete -type f)\""
     deps:
     - path: data/cgpm/complete
-      hash: md5
-      md5: b01aaee70e74d3ad3b3dcca27ab61313.dir
-      size: 117849
+      md5: 001c927bbc3b037bd332a5c78ea9ab57.dir
+      size: 373855
       nfiles: 3
     - path: data/ignored.csv
-      hash: md5
-      md5: 5ffeb41f4182b8f7f062b5f13230557d
-      size: 77540
+      md5: 746f90deb090321bfa790093a24a9d06
+      size: 85884
     - path: scripts/ast_export.py
-      hash: md5
       md5: 301e377deb0aaf75b1a961a6d91153a8
       size: 11045
     params:
@@ -479,28 +216,36 @@ stages:
         parallel.flags: --verbose
     outs:
     - path: data/ast
-      hash: md5
-      md5: d723a36d25e183298f79243c03aaa292.dir
-      size: 98691
+      md5: 3d9f0b38b11913315b9e77598b7b3035.dir
+      size: 682558
       nfiles: 3
+  save-max-number-views:
+    cmd: "find data/cgpm/complete -type f | xargs python scripts/save_n_views.py >>
+      data/max-number-views.txt\n"
+    deps:
+    - path: data/cgpm/complete
+      md5: 001c927bbc3b037bd332a5c78ea9ab57.dir
+      size: 373855
+      nfiles: 3
+    outs:
+    - path: data/max-number-views.txt
+      md5: eccbc87e4b5ce2fe28308fd9f2a7baf3
+      size: 1
   sppl-import:
     cmd:
     - mkdir -p data/sppl/unmerged
-    - "parallel --verbose 'python scripts/sppl_import.py --multi-mix-ast {} --max-number-views\
-      \ data/max-number-views.txt --output data/sppl/unmerged/{/.}.json' :::: <(find\
-      \ data/ast -type f)"
+    - "bash -c \"parallel --verbose 'python scripts/sppl_import.py --multi-mix-ast
+      {} --max-number-views data/max-number-views.txt --output data/sppl/unmerged/{/.}.json'
+      :::: <(find data/ast -type f)\""
     deps:
     - path: data/ast
-      hash: md5
-      md5: d723a36d25e183298f79243c03aaa292.dir
-      size: 98691
+      md5: 3d9f0b38b11913315b9e77598b7b3035.dir
+      size: 682558
       nfiles: 3
     - path: data/max-number-views.txt
-      hash: md5
-      md5: c4ca4238a0b923820dcc509a6f75849b
+      md5: eccbc87e4b5ce2fe28308fd9f2a7baf3
       size: 1
     - path: scripts/sppl_import.py
-      hash: md5
       md5: 60da181980209f224dd1ed4f8b92c57e
       size: 4743
     params:
@@ -508,97 +253,106 @@ stages:
         parallel.flags: --verbose
     outs:
     - path: data/sppl/unmerged
-      hash: md5
-      md5: 857a3be1934d586ff87c54821129a3f2.dir
-      size: 77713
+      md5: f9f685f0fdaa0f9bf6e8fec800549e98.dir
+      size: 541276
       nfiles: 3
   sppl-merge:
-    cmd: "find data/sppl/unmerged -type f | sort | xargs python scripts/sppl_merge.py\
-      \ --output data/sppl/merged.json\n"
+    cmd: "find data/sppl/unmerged -type f | sort | xargs python scripts/sppl_merge.py
+      --output data/sppl/merged.json\n"
     deps:
     - path: data/sppl/unmerged
-      hash: md5
-      md5: 857a3be1934d586ff87c54821129a3f2.dir
-      size: 77713
+      md5: f9f685f0fdaa0f9bf6e8fec800549e98.dir
+      size: 541276
       nfiles: 3
     outs:
     - path: data/sppl/merged.json
-      hash: md5
-      md5: ca230a9375be713e0776d2dd1d24ee58
-      size: 78194
+      md5: 8b41f944f247676867ba0d6c324290d6
+      size: 541640
   sppl-sample:
-    cmd: "python scripts/sppl_sample.py --model data/sppl/merged.json --data data/ignored.csv\
-      \ > data/synthetic-data-gensql.csv # --sample_count 1000\n"
+    cmd: "python scripts/sppl_sample.py --model data/sppl/merged.json --data data/ignored.csv
+      > data/synthetic-data-gensql.csv # --sample_count None\n"
     deps:
     - path: data/ignored.csv
-      hash: md5
-      md5: 5ffeb41f4182b8f7f062b5f13230557d
-      size: 77540
+      md5: 746f90deb090321bfa790093a24a9d06
+      size: 85884
     - path: data/sppl/merged.json
-      hash: md5
-      md5: ca230a9375be713e0776d2dd1d24ee58
-      size: 78194
+      md5: 8b41f944f247676867ba0d6c324290d6
+      size: 541640
     - path: scripts/sppl_sample.py
-      hash: md5
       md5: 65c711874e0eda0e7d79b4a4a3eb6076
       size: 1843
     outs:
     - path: data/synthetic-data-gensql.csv
-      hash: md5
-      md5: a46403f9fa02b0dc465eac9015bd45d0
-      size: 84636
-  qc-tag-samples:
-    cmd: "clojure -X gensql.structure-learning.qc.samples/tag :data data/ignored.csv\
-      \ :samples-synthetic data/synthetic-data-gensql.csv > qc/samples/samples.edn\n"
+      md5: 02f50e66b0e9eca26e32f29d30d30f3d
+      size: 206855
+  save-dependencies:
+    cmd: "find data/cgpm/complete -type f | sort | xargs python scripts/dep_prob.py
+      --data data/numericalized.csv --output data/dep-prob.json\n"
+    deps:
+    - path: data/cgpm/complete
+      md5: 4eb8d9ee4b2dcb28101bcc17b0f3d672.dir
+      size: 376323
+      nfiles: 3
+    outs:
+    - path: data/dep-prob.json
+      md5: 3fe410e41996feee9fe1895af3134a38
+      size: 3978
+  save-linear-stats:
+    cmd: "python scripts/linear_stats.py --data data/ignored.csv --schema data/schema.edn
+      --output data/linear-stats.json\n"
     deps:
     - path: data/ignored.csv
-      hash: md5
-      md5: 5ffeb41f4182b8f7f062b5f13230557d
-      size: 77540
-    - path: data/synthetic-data-gensql.csv
-      hash: md5
-      md5: a46403f9fa02b0dc465eac9015bd45d0
-      size: 84636
-    - path: src/clojure/gensql/structure_learning/qc/samples.clj
-      hash: md5
-      md5: e34e26db3736bb02dd084800c9d6af72
-      size: 1090
+      md5: 746f90deb090321bfa790093a24a9d06
+      size: 85884
+    - path: data/schema.edn
+      md5: 4dd5666b5ed325c90c30ee2699c31b07
+      size: 625
+    - path: scripts/linear_stats.py
+      md5: 613330daf7893bd5f9080104f0234c17
+      size: 4269
     outs:
-    - path: qc/samples/samples.edn
-      hash: md5
-      md5: 67456841283640cd962e574599a73be9
-      size: 442526
+    - path: data/linear-stats.json
+      md5: 2161ceeab70cf27fa0f816dc9de58162
+      size: 15007
+  compare-dep-prob-with-linear:
+    cmd: "python scripts/compare_deps.py --deps data/dep-prob.json --linear data/linear-stats.json
+      >> data/qc-statistical-tests.txt\n"
+    deps:
+    - path: data/dep-prob.json
+      md5: 3fe410e41996feee9fe1895af3134a38
+      size: 3978
+    - path: data/linear-stats.json
+      md5: 2161ceeab70cf27fa0f816dc9de58162
+      size: 15007
+    outs:
+    - path: data/qc-statistical-tests.txt
+      md5: b94d6ffb237bf447cdb9c39536d6c885
+      size: 341
   xcat-complete-import:
     cmd:
     - mkdir -p data/xcat/complete/
-    - "parallel --verbose 'clojure -X gensql.structure-learning.xcat/import :cgpm-json\
-      \ {} :data-csv data/ignored.csv :mapping-table data/mapping-table.edn :numericalized-csv\
-      \ data/numericalized.csv :schema-edn data/schema.edn > data/xcat/complete/{/.}.edn'\
-      \ :::: <(find data/cgpm/complete -type f)"
+    - "bash -c \"parallel --verbose \\\"clojure -X gensql.structure-learning.xcat/import
+      :cgpm-json '\\\\\\\"{}\\\\\\\"' :data-csv data/ignored.csv :mapping-table data/mapping-table.edn
+      :numericalized-csv data/numericalized.csv :schema-edn data/schema.edn > data/xcat/complete/{/.}.edn\\\
+      \" :::: <(find data/cgpm/complete -type f)\""
     deps:
     - path: data/cgpm/complete
-      hash: md5
-      md5: b01aaee70e74d3ad3b3dcca27ab61313.dir
-      size: 117849
+      md5: 46ffed3ecdb6a5798cf22e6fa9a2ab2b.dir
+      size: 373891
       nfiles: 3
     - path: data/ignored.csv
-      hash: md5
-      md5: 5ffeb41f4182b8f7f062b5f13230557d
-      size: 77540
+      md5: 746f90deb090321bfa790093a24a9d06
+      size: 85884
     - path: data/mapping-table.edn
-      hash: md5
-      md5: 1d3e7314f20a2b2d50deff70b323f428
-      size: 3210
+      md5: 21f032e2a4b3ccbbf146f2e6ee1115a2
+      size: 1465
     - path: data/numericalized.csv
-      hash: md5
-      md5: 345eaad4a50da45d1f4d50d326de0f2b
-      size: 11932
+      md5: 3c360565634a4baecd5774f862a45bbe
+      size: 62634
     - path: data/schema.edn
-      hash: md5
-      md5: 50689cad3539b17cfc255d6dc2545e1c
-      size: 601
+      md5: 4dd5666b5ed325c90c30ee2699c31b07
+      size: 625
     - path: src/clojure/gensql/structure_learning/xcat.clj
-      hash: md5
       md5: 50de15b94242c6c71b6822f11cb58771
       size: 4592
     params:
@@ -606,276 +360,44 @@ stages:
         parallel.flags: --verbose
     outs:
     - path: data/xcat/complete/
-      hash: md5
-      md5: 56cb77fd3801d7cbf5e7504284d45003.dir
-      size: 783240
+      md5: 85d35699d9a0ce883f38425daa451d00.dir
+      size: 2326249
       nfiles: 3
   xcat-merge:
-    cmd: "clj -X gensql.structure-learning.clojurecat/merge :models data/xcat/complete\
-      \ :out data/xcat/xcat.merged.edn\n"
+    cmd: "clj -X gensql.structure-learning.clojurecat/merge :models data/xcat/complete
+      :out data/xcat/xcat.merged.edn\n"
     deps:
     - path: data/xcat/complete
-      hash: md5
-      md5: 56cb77fd3801d7cbf5e7504284d45003.dir
-      size: 783240
+      md5: 85d35699d9a0ce883f38425daa451d00.dir
+      size: 2326249
       nfiles: 3
     outs:
     - path: data/xcat/xcat.merged.edn
-      hash: md5
-      md5: fee4f7c7a25a88fecb6a2de9e75ef5b0
-      size: 783288
-  qc-dashboard-spec:
-    cmd: "clojure -X gensql.structure-learning.qc.dashboard/spec :samples qc/samples/samples.edn\
-      \ :schema data/schema.edn :correlation data/linear-stats.json > qc/specs/qc-dashboard.vl.json\n"
-    deps:
-    - path: data/linear-stats.json
-      hash: md5
-      md5: d5e5ecd37ebd8d5cd03c1bbd6a6fe7f6
-      size: 2899
-    - path: data/schema.edn
-      hash: md5
-      md5: 50689cad3539b17cfc255d6dc2545e1c
-      size: 601
-    - path: qc/samples/samples.edn
-      hash: md5
-      md5: 67456841283640cd962e574599a73be9
-      size: 442526
-    - path: src/clojure/gensql/structure_learning/qc/dashboard.clj
-      hash: md5
-      md5: 11529f94587a9ade1d3fa4cb84ff0445
-      size: 28313
-    - path: src/clojure/gensql/structure_learning/qc/util.clj
-      hash: md5
-      md5: 57e1815724c43afbd84c9414d32a4aee
-      size: 4118
-    params:
-      params.yaml:
-        qc.columns:
-    outs:
-    - path: qc/specs/qc-dashboard.vl.json
-      hash: md5
-      md5: 47353536a0e2c56390d20c2fc3892a1d
-      size: 497826
-  qc-dashboard-app:
-    cmd: "clojure -X gensql.structure-learning.qc.app/create :template qc/templates/index.html\
-      \ :spec qc/specs/qc-dashboard.vl.json :renderer canvas :title '\"QC dashboard\"\
-      ' > qc/app/qc-dashboard.html\n"
-    deps:
-    - path: qc/specs/qc-dashboard.vl.json
-      hash: md5
-      md5: 47353536a0e2c56390d20c2fc3892a1d
-      size: 497826
-    - path: qc/templates/index.html
-      hash: md5
-      md5: ac51efb107febc1caf14b5e2c6d0489d
-      size: 1685
-    - path: src/clojure/gensql/structure_learning/qc/app.clj
-      hash: md5
-      md5: 4a24b05e49591694f1019ed876596ea6
-      size: 519
-    outs:
-    - path: qc/app/qc-dashboard.html
-      hash: md5
-      md5: e3402d22152c64e955cf3388766534f2
-      size: 499500
-  qc-splom-spec:
-    cmd: "clojure -X gensql.structure-learning.qc.splom/spec :samples qc/samples/samples.edn\
-      \ :schema data/schema.edn :correlation data/linear-stats.json > qc/specs/qc-splom.vl.json\n"
-    deps:
-    - path: data/linear-stats.json
-      hash: md5
-      md5: d5e5ecd37ebd8d5cd03c1bbd6a6fe7f6
-      size: 2899
-    - path: data/schema.edn
-      hash: md5
-      md5: 50689cad3539b17cfc255d6dc2545e1c
-      size: 601
-    - path: qc/samples/samples.edn
-      hash: md5
-      md5: 67456841283640cd962e574599a73be9
-      size: 442526
-    - path: src/clojure/gensql/structure_learning/qc/splom.clj
-      hash: md5
-      md5: a753879cef043c55d23dea202b41abe5
-      size: 10862
-    - path: src/clojure/gensql/structure_learning/qc/util.clj
-      hash: md5
-      md5: 57e1815724c43afbd84c9414d32a4aee
-      size: 4118
-    params:
-      params.yaml:
-        qc.columns:
-    outs:
-    - path: qc/specs/qc-splom.vl.json
-      hash: md5
-      md5: 171da5a9e3af0f572f79596fff4b5b0b
-      size: 488635
-  qc-splom-app:
-    cmd: "clojure -X gensql.structure-learning.qc.app/create :template qc/templates/index.html\
-      \ :spec qc/specs/qc-splom.vl.json :renderer canvas :title '\"QC scatter plot\
-      \ matrix\"' > qc/app/qc-splom.html\n"
-    deps:
-    - path: qc/specs/qc-splom.vl.json
-      hash: md5
-      md5: 171da5a9e3af0f572f79596fff4b5b0b
-      size: 488635
-    - path: qc/templates/index.html
-      hash: md5
-      md5: ac51efb107febc1caf14b5e2c6d0489d
-      size: 1685
-    - path: src/clojure/gensql/structure_learning/qc/app.clj
-      hash: md5
-      md5: 4a24b05e49591694f1019ed876596ea6
-      size: 519
-    outs:
-    - path: qc/app/qc-splom.html
-      hash: md5
-      md5: 02b78a8efb352785b73f50856d79f620
-      size: 490319
-  predict:
-    cmd: "python scripts/predict.py --schema data/schema.edn --training data/ignored.csv\
-      \ --training data/synthetic-data-gensql.csv --test data/test/test.csv --output\
-      \ data/predictions.csv #--test data/test/test-shifted.csv\n"
-    deps:
-    - path: data/ignored.csv
-      hash: md5
-      md5: 5ffeb41f4182b8f7f062b5f13230557d
-      size: 77540
-    - path: data/schema.edn
-      hash: md5
-      md5: 50689cad3539b17cfc255d6dc2545e1c
-      size: 601
-    - path: data/synthetic-data-gensql.csv
-      hash: md5
-      md5: a46403f9fa02b0dc465eac9015bd45d0
-      size: 84636
-    - path: data/test/test.csv
-      hash: md5
-      md5: 6bdd1f24302e6ee6c1836bf15edfada2
-      size: 45597
-    - path: scripts/predict.py
-      hash: md5
-      md5: 9791ef81e7424516b5c452380c448706
-      size: 7371
-    params:
-      params.yaml:
-        synthetic_data_evaluation:
-          predictor: Random_forest
-          datasets:
-          - synthetic-data-gensql.csv
-    outs:
-    - path: data/predictions.csv
-      hash: md5
-      md5: a4a35684fdfdf5da4e501d7f4833026a
-      size: 24264
+      md5: 1ccef56fbe4201e237a7aa36ab27e2c6
+      size: 2326297
   assemble-database:
-    cmd: "clojure -M:exec gensql.structure-learning.main assemble-database --table-name\
-      \ data --table-path data/nullified.csv --model-name baseline_model --model-path\
-      \ data/xcat/xcat.merged.edn > data/db.edn\n"
+    cmd: "clojure -M:exec gensql.structure-learning.main assemble-database --table-name
+      data --table-path data/nullified.csv --model-name baseline_model --model-path
+      data/xcat/complete/0.edn > data/db.edn\n"
     deps:
     - path: data/cgpm
-      hash: md5
-      md5: 166c893fcb41ec48e6955a120eadbd5e.dir
-      size: 255962
-      nfiles: 10
+      md5: 20e5eb3964202533c88add66a6171fb2.dir
+      size: 978970
+      nfiles: 7
     - path: data/nullified.csv
-      hash: md5
-      md5: 54da26f21f0fee6db642e1761ebe69b9
-      size: 268196
+      md5: 23395929f0d973d8568076238ff453d3
+      size: 269085
     - path: data/xcat
-      hash: md5
-      md5: 8986883161dcc85bd1cd9b022fd2a29a.dir
-      size: 1566528
+      md5: d8a0a8fc3d3a10736b6f6683f3a48957.dir
+      size: 4652546
       nfiles: 4
     params:
       params.yaml:
         database.model_name: baseline_model
-        database.model_path: data/xcat/xcat.merged.edn
+        database.model_path: data/xcat/complete/0.edn
         database.table_name: data
         database.table_path: data/nullified.csv
     outs:
     - path: data/db.edn
-      hash: md5
-      md5: bfc7ea1d137db6900ceff8775f784707
-      size: 1422959
-  qc-discretize@synthetic-data-gensql.csv:
-    cmd: "mkdir -p data/discretized/ && python scripts/discretize.py --real data/ignored.csv\
-      \ --synthetic data/synthetic-data-gensql.csv --schema data/loom-schema.json\
-      \ --real-disc data/discretized/ignored.csv --synthetic-disc data/discretized/synthetic-data-gensql.csv\n"
-    deps:
-    - path: data/ignored.csv
-      hash: md5
-      md5: 5ffeb41f4182b8f7f062b5f13230557d
-      size: 77540
-    - path: data/loom-schema.json
-      hash: md5
-      md5: 68f027a12982e5d4f01f40fe0450b281
-      size: 127
-    - path: data/synthetic-data-gensql.csv
-      hash: md5
-      md5: a46403f9fa02b0dc465eac9015bd45d0
-      size: 84636
-    - path: scripts/discretize.py
-      hash: md5
-      md5: 413bc37503837d33c7f2ae72359e994a
-      size: 2033
-    outs:
-    - path: data/discretized/synthetic-data-gensql.csv
-      hash: md5
-      md5: a46403f9fa02b0dc465eac9015bd45d0
-      size: 84636
-  qc-fidelity-table@synthetic-data-gensql.csv:
-    cmd: "mkdir -p data/fidelity/ && (LD_DEBUG=libs assess-distance --data-1 data/discretized/ignored.csv\
-      \ --data-2 data/discretized/synthetic-data-gensql.csv --bivariate > data/fidelity/synthetic-data-gensql.csv)\n"
-    deps:
-    - path: data/discretized/ignored.csv
-      hash: md5
-      md5: 5ffeb41f4182b8f7f062b5f13230557d
-      size: 77540
-    - path: data/discretized/synthetic-data-gensql.csv
-      hash: md5
-      md5: a46403f9fa02b0dc465eac9015bd45d0
-      size: 84636
-    outs:
-    - path: data/fidelity/synthetic-data-gensql.csv
-      hash: md5
-      md5: 4b0979a29feceb30a26e267de1df19f6
-      size: 735
-  qc-fidelity-json:
-    cmd: "python scripts/fidelity2json.py --params params.yaml >> data/fidelity.json\n"
-    deps:
-    - path: data/fidelity/
-      hash: md5
-      md5: ee1f5499c3c52f3af72097a8dd5f0051.dir
-      size: 762
-      nfiles: 2
-    - path: scripts/fidelity2json.py
-      hash: md5
-      md5: ebe89a5b3530a60999cc3a7c0cfc1493
-      size: 860
-    params:
-      params.yaml:
-        synthetic_data_evaluation.datasets:
-        - synthetic-data-gensql.csv
-    outs:
-    - path: data/fidelity.json
-      hash: md5
-      md5: a53aad464233582b9b8841c3a270df01
-      size: 1494
-  qc-fidelity-app:
-    cmd: "sed \"s|{{DATA}}|$(cat data/fidelity.json)|\" qc/templates/fidelity.html\
-      \ > qc/app/fidelity.html\n"
-    deps:
-    - path: data/fidelity.json
-      hash: md5
-      md5: a53aad464233582b9b8841c3a270df01
-      size: 1494
-    - path: qc/templates/fidelity.html
-      hash: md5
-      md5: 26cb40e5e0c02c8ca73e3dcdaa21f814
-      size: 2037
-    outs:
-    - path: qc/app/fidelity.html
-      hash: md5
-      md5: 5d563d763db76aaf9686fb4a4cd582ca
-      size: 3522
+      md5: 68cb41ecb110111722bb4ab99ea1c6f8
+      size: 1386627
