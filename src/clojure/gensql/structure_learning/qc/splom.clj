@@ -3,6 +3,7 @@
   (:require [clojure.data.json :as json]
             [clojure.edn :as edn]
             [cheshire.core :as cheshire]
+            [cheshire.factory :as factory]
             [gensql.structure-learning.dvc :as dvc]
             [gensql.structure-learning.qc.vega :as vega]
             [gensql.structure-learning.qc.util :refer [filtering-summary should-bin? bind-to-element
@@ -99,7 +100,10 @@
   [{sample-path :samples schema-path :schema correlation-path :correlation}]
   (let [schema (-> schema-path str slurp edn/read-string)
         samples (-> sample-path str slurp edn/read-string)
-        correlation (some-> correlation-path str slurp (cheshire/parse-string true))
+        correlation
+        (binding [factory/*json-factory* (factory/make-json-factory
+                                          {:allow-non-numeric-numbers true})]
+          (some-> correlation-path str slurp (cheshire/parse-string true)))
 
         ;; Visualize the columns set in params.yaml.
         ;; If not specified, visualize all the columns.
