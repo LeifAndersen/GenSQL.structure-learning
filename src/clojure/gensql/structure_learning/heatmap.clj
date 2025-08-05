@@ -150,18 +150,34 @@
 
 (def ^:private vega-lite-schema "https://vega.github.io/schema/vega-lite/v5.json")
 
+(defn- preserve-nan-as-keyword [json-str]
+  (-> json-str
+      (clojure.string/replace #"\bNaN\b" "\"__NaN__\"")
+      (clojure.string/replace #"\bInfinity\b" "\"__Infinity__\"")
+      (clojure.string/replace #"-Infinity\b" "\"__NegInfinity__\"")))
+
+(defn- handle-nan [k v]
+  (case v
+    "__NaN__" Double/NaN
+    "__Infinity__" Double/POSITIVE_INFINITY
+    "__NegInfinity__" Double/NEGATIVE_INFINITY
+    v))
+
 (defn vega-lite
   "Prints a Vega-Lite spec for a statistic JSON file."
   [& {:keys [default domain field name scheme stats-path sort-path]}]
   (assert (some? name))
   (assert (some? stats-path))
-  (let [sm (cond-> (slurp stats-path)
-             true (json/read-str)
+  (println stats-path)
+  (println (slurp stats-path))
+  (let [sm (cond-> (preserve-nan-as-keyword (slurp stats-path))
+             true (json/read-str :value-fn handle-nan)
              field (update-stats #(get % field))
              default (fill-missing default))
         sort-sm (some-> sort-path
                         (slurp)
-                        (json/read-str)
+                        (preserve-nan-as-keyword)
+                        (json/read-str :value-fn handle-nan)
                         (fill-missing 1.))
         base-spec {:$schema vega-lite-schema
                    :data {:values (values {name sm})}}
@@ -170,4 +186,9 @@
                                 (sort-spec (or sort-sm sm))
                                 (when domain (domain-spec domain))
                                 (when scheme (scheme-spec scheme)))]
-    (json/write spec *out*)))
+    (json/write spec *out* :value-fn (fn [k v]
+                                       (cond
+                                         (and (number? v) (Double/isNaN v)) "NaN",
+                                         (and (number? v) (Double/isInfinite v))
+                                         (if (pos? v) "Infinity" "-Infinity"),
+                                         :else v)))))
