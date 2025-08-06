@@ -179,26 +179,6 @@ stages:
     outs:
       - data/dep-prob.vl.json
 
-  dep-prob-vg:
-    cmd: >
-      pnpm vl2vg
-      < data/dep-prob.vl.json
-      > data/dep-prob.vg.json
-    deps:
-      - data/dep-prob.vl.json
-    outs:
-      - data/dep-prob.vg.json
-
-  dep-prob-svg:
-    cmd: >
-      pnpm vg2svg
-      < data/dep-prob.vg.json
-      > data/dep-prob.svg
-    deps:
-      - data/dep-prob.vg.json
-    outs:
-      - data/dep-prob.svg
-
   save-linear-stats:
     cmd: >
       python scripts/linear_stats.py
@@ -230,25 +210,6 @@ stages:
     outs:
       - data/linear-stats.vl.json
 
-  linear-stats-vg:
-    cmd: >
-      pnpm vl2vg
-      < data/linear-stats.vl.json
-      > data/linear-stats.vg.json
-    deps:
-      - data/linear-stats.vl.json
-    outs:
-      - data/linear-stats.vg.json
-
-  linear-stats-svg:
-    cmd: >
-      pnpm vg2svg
-      < data/linear-stats.vg.json
-      > data/linear-stats.svg
-    deps:
-      - data/linear-stats.vg.json
-    outs:
-      - data/linear-stats.svg
   compare-dep-prob-with-linear:
     desc: "Compares results from dependency probability with standard statistical tests"
     cmd: >
@@ -332,19 +293,6 @@ stages:
     outs:
       - data/synthetic-data-gensql.csv
 
-  qc-tag-samples:
-    cmd: >
-      clojure -X gensql.structure-learning.qc.samples/tag
-      :data data/ignored.csv
-      :samples-synthetic data/synthetic-data-gensql.csv
-      > qc/samples/samples.edn
-    deps:
-      - data/ignored.csv
-      - data/synthetic-data-gensql.csv
-      - src/clojure/gensql/structure_learning/qc/samples.clj
-    outs:
-      - qc/samples/samples.edn
-
   xcat-complete-import:
     desc: "Imports the final CGPM Crosscat samples as XCat records."
     cmd:
@@ -380,72 +328,6 @@ stages:
       - data/xcat/complete
     outs:
       - data/xcat/xcat.merged.edn
-
-  qc-dashboard-spec:
-    cmd: >
-      clojure -X gensql.structure-learning.qc.dashboard/spec
-      :samples qc/samples/samples.edn
-      :schema data/schema.edn
-      :correlation data/linear-stats.json
-      > qc/specs/qc-dashboard.vl.json
-    params:
-      - qc.columns
-    deps:
-      - qc/samples/samples.edn
-      - data/schema.edn
-      - data/linear-stats.json
-      - src/clojure/gensql/structure_learning/qc/dashboard.clj
-      - src/clojure/gensql/structure_learning/qc/util.clj
-    outs:
-      - qc/specs/qc-dashboard.vl.json
-
-  qc-dashboard-app:
-    cmd: >
-      clojure -X gensql.structure-learning.qc.app/create
-      :template qc/templates/index.html
-      :spec qc/specs/qc-dashboard.vl.json
-      :renderer canvas
-      :title '"QC dashboard"'
-      > qc/app/qc-dashboard.html
-    deps:
-      - qc/templates/index.html
-      - qc/specs/qc-dashboard.vl.json
-      - src/clojure/gensql/structure_learning/qc/app.clj
-    outs:
-      - qc/app/qc-dashboard.html
-
-  qc-splom-spec:
-    cmd: >
-      clojure -X gensql.structure-learning.qc.splom/spec
-      :samples qc/samples/samples.edn
-      :schema data/schema.edn
-      :correlation data/linear-stats.json
-      > qc/specs/qc-splom.vl.json
-    params:
-      - qc.columns
-    deps:
-      - qc/samples/samples.edn
-      - data/schema.edn
-      - data/linear-stats.json
-      - src/clojure/gensql/structure_learning/qc/splom.clj
-      - src/clojure/gensql/structure_learning/qc/util.clj
-    outs:
-      - qc/specs/qc-splom.vl.json
-
-  qc-splom-app:
-    cmd: >
-      clojure -X gensql.structure-learning.qc.app/create
-      :template qc/templates/index.html
-      :spec qc/specs/qc-splom.vl.json
-      :renderer canvas
-      :title '"QC scatter plot matrix"'
-      > qc/app/qc-splom.html
-    deps:
-      - qc/templates/index.html
-      - qc/specs/qc-splom.vl.json
-      - src/clojure/gensql/structure_learning/qc/app.clj
-    outs:
-      - qc/app/qc-splom.html
 
   predict:
       cmd: >
@@ -487,63 +369,3 @@ stages:
       - data/xcat
     outs:
       - data/db.edn
-
-  qc-discretize:
-    foreach: ${synthetic_data_evaluation.datasets}
-    do:
-      cmd: >
-        mkdir -p data/discretized/ &&
-        python scripts/discretize.py
-        --real data/ignored.csv
-        --synthetic data/${item}
-        --schema data/loom-schema.json
-        --real-disc data/discretized/ignored.csv
-        --synthetic-disc data/discretized/${item}
-      deps:
-        - scripts/discretize.py
-        - data/ignored.csv
-        - data/${item}
-        - data/loom-schema.json
-      outs:
-        - data/discretized/${item}
-
-  qc-fidelity-table:
-    foreach: ${synthetic_data_evaluation.datasets}
-    do:
-      cmd: >
-        mkdir -p data/fidelity/ &&
-        assess-distance
-        --data-1 data/discretized/ignored.csv
-        --data-2 data/discretized/${item}
-        --bivariate
-        > data/fidelity/${item}
-      deps:
-        - data/discretized/ignored.csv
-        - data/discretized/${item}
-      outs:
-        - data/fidelity/${item}
-
-  qc-fidelity-json:
-    cmd: >
-      python scripts/fidelity2json.py
-      --params params.yaml
-      >> data/fidelity.json
-    params:
-      - synthetic_data_evaluation.datasets
-    deps:
-      - scripts/fidelity2json.py
-      - data/fidelity/
-    outs:
-      - data/fidelity.json
-
-  qc-fidelity-app:
-    cmd: >
-      awk 'BEGIN {data = ARGV[1]; ARGV[1] = ""; while ((getline line < data) > 0) data_str = data_str line "\n"} {gsub("{{DATA}}", data_str)} 1'
-      data/fidelity.json
-      qc/templates/fidelity.html
-      > qc/app/fidelity.html
-    deps:
-      - data/fidelity.json
-      - qc/templates/fidelity.html
-    outs:
-      - qc/app/fidelity.html
