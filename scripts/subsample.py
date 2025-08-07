@@ -57,6 +57,7 @@ def main():
         held_out.to_csv(f"{args.test_data_dir}/test.csv", index=False)
     else:
         df[bool_index].to_csv(args.output)
+        df[bool_index].to_csv(f"{args.test_data_dir}/test.csv", index=False)
     df[~bool_index].to_csv(f"{args.test_data_dir}/test-shifted.csv", index=False)
 
 
