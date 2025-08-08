@@ -41,6 +41,8 @@ def one_hot_enconding(train_dataset, test_dataset):
     and return both as NP arrays.
     """
     encoder = OneHotEncoder(handle_unknown="error")
+    train_dataset = train_dataset.astype(str)
+    test_dataset = test_dataset.astype(str)
     # We need to fit the encoder on both, the training and the test data
     # to ensure the categoridal encodings in both agrees and is robust to cases
     # where a category doesn't appear in one of them.
@@ -187,18 +189,21 @@ def main():
             X_train, y_train, X_test, y_test = prep_data_for_ml(
                 target, train_dataset, test_dataset, schema
             )
-            ml_model = train_ml_model(
-                X_train, y_train, schema[target], config["predictor"]
-            )
-            # Need to call NP.array.flatten() here because CatBoost decides to
-            # wrap prediction into a separate list.
-            results["prediction"].extend((ml_model.predict(X_test).flatten().tolist()))
-            results["true_value"].extend(y_test.tolist())
+            try:
+                ml_model = train_ml_model(
+                    X_train, y_train, schema[target], config["predictor"]
+                )
+                # Need to call NP.array.flatten() here because CatBoost decides to
+                # wrap prediction into a separate list.
+                results["prediction"].extend((ml_model.predict(X_test).flatten().tolist()))
+                results["true_value"].extend(y_test.tolist())
 
-            n_test_datapoints = y_test.shape[0]
-            results["target"].extend([target] * n_test_datapoints)
-            results["training_data"].extend([train_dataset_path] * n_test_datapoints)
-            results["test_data"].extend([test_dataset_path] * n_test_datapoints)
+                n_test_datapoints = y_test.shape[0]
+                results["target"].extend([target] * n_test_datapoints)
+                results["training_data"].extend([train_dataset_path] * n_test_datapoints)
+                results["test_data"].extend([test_dataset_path] * n_test_datapoints)
+            except Exception as e:
+                print(f"Couldn't build model: {e}")
 
     pd.DataFrame(results).to_csv(args.output, index=False)
 
