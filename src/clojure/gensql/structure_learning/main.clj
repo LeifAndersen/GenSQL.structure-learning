@@ -31,13 +31,17 @@
   (let [params (dvc/yaml)
         params-schema (:schema params)
         default-stattype (get params :default-stat-type  :ignore)
-        guessed-schema (->> (csv/read-csv *in*)
+        csv (csv/read-csv *in*)
+        ignore-all-schema (into {}
+                                (for [i (first csv)]
+                                  [i :ignore]))
+        guessed-schema (->> csv
                             (sequence (comp (gensql.csv/as-maps)
                                             (map #(medley/remove-vals (every-pred string? string/blank?) %))
                                             (map #(medley/remove-keys (set (keys params-schema)) %))))
                             (gensql.csv/heuristic-coerce-all)
                             (schema/guess default-stattype))
-        schema (merge guessed-schema params-schema)]
+        schema (merge ignore-all-schema guessed-schema params-schema)]
     (assert (not (every? #{:ignore} (vals schema)))
             "The statistical types of the columns in data.csv can't be guessed confidently.\nAll columns are ignored. Set statistical types manually in params.yaml to fix this")
     (schema/print-ignored schema)
