@@ -28,7 +28,8 @@ def impute_missing_features(train_dataset, test_dataset, schema):
         if schema[c] == "numerical":
             replacements[c] = train_dataset[c].median()
         elif schema[c] == "nominal":
-            replacements[c] = train_dataset[c].mode()[0]
+            m = train_dataset[c].mode()
+            replacements[c] = m[0] if len(m) > 0 else "missing"
         else:
             raise ValueError(error_message_stat_type(schema[c]))
     train_dataset = train_dataset.fillna(replacements)
@@ -186,10 +187,10 @@ def main():
             test_dataset = test_dataset_all.sample(
                 config.get("N", len(test_dataset_all)), random_state=int(params["seed"])
             )
-            X_train, y_train, X_test, y_test = prep_data_for_ml(
-                target, train_dataset, test_dataset, schema
-            )
             try:
+                X_train, y_train, X_test, y_test = prep_data_for_ml(
+                    target, train_dataset, test_dataset, schema
+                )
                 ml_model = train_ml_model(
                     X_train, y_train, schema[target], config["predictor"]
                 )
