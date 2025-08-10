@@ -69,7 +69,7 @@ def anova(df, c1, c2):
             samples.append(
                 df[(df[c1] == categorical_value) & (~df[c2].isnull())][c2].values
             )
-    F, p = stats.f_oneway(*samples)
+    F, p = stats.f_oneway(*samples) if len(samples) > 1 else np.nan, np.nan
     return {
         "F": F,
         "p-value": p,
