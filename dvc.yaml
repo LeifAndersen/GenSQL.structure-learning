@@ -1,14 +1,31 @@
 stages:
+  
+  pivot:
+    cmd: >
+      python scripts/pivot.py
+      --data data/data.csv
+      --params params.yaml
+      --output data/pivoted.csv
+    deps:
+      - data/data.csv
+      - scripts/pivot.py
+    params:
+      - pivot
+      - seed
+      - nullify
+    out:
+      - data/pivoted.csv
+
   subsample:
     cmd: >
       mkdir -p data/test &&
       python scripts/subsample.py
-      --data data/data.csv
+      --data data/pivoted.csv
       --test-data-dir data/test
       --params params.yaml
       --output data/subsampled.csv
     deps:
-      - data/data.csv
+      - data/pivoted.csv
       - scripts/subsample.py
     params:
       - sub_sample
