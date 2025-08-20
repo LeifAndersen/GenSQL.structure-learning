@@ -13,7 +13,7 @@ stages:
       - pivot
       - seed
       - nullify
-    out:
+    outs:
       - data/pivoted.csv
 
   subsample:

@@ -80,3 +80,12 @@ database:
   model_path: data/xcat/xcat.merged.edn
   # model_path: data/sppl/merged.json
   # model_path: data/xcat/complete/sample.0.edn
+pivot: null
+  # steps:
+  #  - index: [foo, bar]
+  #    key: baz
+  #  - index: [foo]
+  #    key: bar
+  # size: 0.5
+  # size_key: foo
+  # filter_cutoff 0.75

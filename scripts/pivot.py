@@ -29,6 +29,7 @@ def munge(s: str):
   """Munges column names to ones the rest of the pipeline can handle.
   Currently this is a lossy operation."""
   ## TODO, make a smarter munger (maybe parameterize it too)
+  s = re.sub(r"[()\"']", "", s)
   return re.sub(r"[^0-9A-Za-z_]", "_", s)
 
 def shrink(df: pd.DataFrame, datakey: str, size: float) -> pd.DataFrame:
@@ -71,7 +72,7 @@ def main():
     filter_cutoff = params["pivot"].get("filter_cutoff", 0.75)
     size = params["pivot"].get("size", 1)
     size_key = params["pivot"].get("size_key", None)
-    df = filter_frame(df)
+    df = filter_frame(df, filter_cutoff)
     for p in params["pivot"].get("steps", []) or []:
       index = p.get("index", []) or []
       key = p.get("key", None)
