@@ -64,6 +64,7 @@ def main():
 
   params = yaml.safe_load(args.params)
   nullify = set(params.get("nullify", []) or [])
+  na_rep = "" if len(nullify) == 0 else nullify[0]
 
   df = pd.read_csv(args.data, na_values=nullify) # dtype=str
   if "pivot" in params and params["pivot"] is not None:
@@ -78,9 +79,9 @@ def main():
         df = filter_frame(pivot(df, index, key), filter_cutoff)
     if size_key:
       shrink(df, size_key, size)
-    df.set_axis([munge(str(c)) for c in df], axis=1).to_csv(args.output, index=False)
+    df.set_axis([munge(str(c)) for c in df], axis=1).to_csv(args.output, index=False, na_rep = na_rep)
   else:
-    pd.to_csv(args.output, index=False, na_rep="" if len(nullify) == 0 else nullify[0])
+    df.to_csv(args.output, index=False, na_rep=na_rep)
 
 if __name__ == "__main__":
   main()
