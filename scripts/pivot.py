@@ -79,7 +79,7 @@ def main():
       if key:
         df = filter_frame(pivot(df, index, key), filter_cutoff)
     if size_key:
-      shrink(df, size_key, size)
+      df = shrink(df, size_key, size)
     df.set_axis([munge(str(c)) for c in df], axis=1).to_csv(args.output, index=False, na_rep = na_rep)
   else:
     df.to_csv(args.output, index=False, na_rep=na_rep)
