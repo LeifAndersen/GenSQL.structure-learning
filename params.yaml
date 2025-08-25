@@ -7,7 +7,7 @@ sub_sample:
   #    - GEO
   #  Users:
   #    - Commercial
-  #N: 1000
+  N: 1000
 parallel:
   # To limit the number of jobs GNU Parallel spawns use add the flag `--jobs n`.
   flags: >-
@@ -18,7 +18,6 @@ nullify:
   # - NaN
   # - missing
 schema:
-  baz: numerical
   # Key/value pairs can be added here to explicitly override the inferred schema
   # for each column. The available types are as follows: numerical, nominal, and ignore.
   # For example, to force the "age" column to be treated as a
@@ -81,12 +80,12 @@ database:
   model_path: data/xcat/xcat.merged.edn
   # model_path: data/sppl/merged.json
   # model_path: data/xcat/complete/sample.0.edn
-pivot:
-  steps:
-    - index: [foo]
-      key: [bar, bar2]
-  size: 0.5
-  size_key: foo
-  filter_cutoff: 0.75
-  ignore:
-    - qux
+pivot: null
+# steps:
+#   - index: [foo]
+#     key: [bar, bar2]
+# size: 0.5
+# size_key: foo
+# filter_cutoff: 0.75
+# ignore:
+#   - qux
