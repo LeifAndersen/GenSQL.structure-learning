@@ -37,6 +37,7 @@ stages:
   validate-column-names:
     cmd: bin/validate.sh
     deps:
+      - data/pivoted.csv
       - data/subsampled.csv
     outs:
       - data/validated.csv
