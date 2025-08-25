@@ -16,14 +16,15 @@ def filter_frame(df: pd.DataFrame, filter_cutoff: float) -> pd.DataFrame:
                     df[col].value_counts(normalize=True,dropna=False).iloc[0] < 0.75]
   return df[cols_to_keep]
 
-def pivot(df: pd.DataFrame, index: List[str], column: str) -> pd.DataFrame:
+def pivot(df: pd.DataFrame, index: List[str], categories: List[str]) -> pd.DataFrame:
   """Pivot the dataframe across `column`, leaving the `index` columns unchanged."""
-  categories = [column]
   category_values = [col for col in df
                      if col not in index and col not in categories]
-  dup_key="dup_" + column
-  df_dup = df.assign(**{dup_key: df.groupby(index+categories, dropna=False).cumcount()})
-  return df_dup.pivot(index=index+[dup_key], columns=categories, values=category_values).reset_index()
+  #dup_key="dup_" + (categories[0] if len(categories) > 0 else "None")
+  #df_dup = df.assign(**{dup_key: df.groupby(index+categories, dropna=False).cumcount()})
+  #return df_dup.pivot(index=index+[dup_key], columns=categories, values=category_values).reset_index()
+  df_dup = df
+  return df_dup.pivot(index=index, columns=categories, values=category_values).reset_index()
 
 def munge(s: str):
   """Munges column names to ones the rest of the pipeline can handle.
@@ -35,7 +36,7 @@ def munge(s: str):
 def shrink(df: pd.DataFrame, datakey: str, size: float) -> pd.DataFrame:
   """Subsample the dataframe, but keep `datakey` groups in tact."""
   subjects = shuffle(df[datakey].unique())
-  selected = subjects[1:math.floor(len(subjects)*size)]
+  selected = subjects[0:math.floor(len(subjects)*size)]
   return df[df[datakey].isin(selected)]
 
 def write_csv(df: pd.DataFrame, name: str):
@@ -66,19 +67,26 @@ def main():
   params = yaml.safe_load(args.params)
   nullify = set(params.get("nullify", []) or [])
   na_rep = "" if len(nullify) == 0 else nullify[0]
+  seed = params.get("seed", None)
 
   df = pd.read_csv(args.data, na_values=nullify) # dtype=str
   if "pivot" in params and params["pivot"] is not None:
+
+    ignore = params["pivot"].get("ignore", []) or []
+    df = df.drop(columns=ignore, errors='ignore')
+
     filter_cutoff = params["pivot"].get("filter_cutoff", 0.75)
     size = params["pivot"].get("size", 1)
     size_key = params["pivot"].get("size_key", None)
     df = filter_frame(df, filter_cutoff)
     for p in params["pivot"].get("steps", []) or []:
       index = p.get("index", []) or []
-      key = p.get("key", None)
-      if key:
-        df = filter_frame(pivot(df, index, key), filter_cutoff)
-    if size_key:
+      keys = p.get("key", []) or []
+      if type(keys) is str:
+        keys = [keys]
+      if len(keys) > 0:
+        df = filter_frame(pivot(df, index, keys), filter_cutoff)
+    if size and size_key:
       df = shrink(df, size_key, size)
     df.set_axis([munge(str(c)) for c in df], axis=1).to_csv(args.output, index=False, na_rep = na_rep)
   else:
