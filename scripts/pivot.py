@@ -29,13 +29,13 @@ def filter_frame(df: pd.DataFrame, filter_cutoff: float) -> pd.DataFrame:
 
 def pivot(df: pd.DataFrame, index: List[str], categories: List[str]) -> pd.DataFrame:
   """Pivot the dataframe across `column`, leaving the `index` columns unchanged."""
+  index = [i for i in index if i in df.columns]
+  categories = [i for i in categories if i in df.columns]
   category_values = [col for col in df
                      if col not in index and col not in categories]
-  #dup_key="dup_" + (categories[0] if len(categories) > 0 else "None")
-  #df_dup = df.assign(**{dup_key: df.groupby(index+categories, dropna=False).cumcount()})
-  #return df_dup.pivot(index=index+[dup_key], columns=categories, values=category_values).reset_index()
-  df_dup = df
-  return df_dup.pivot(index=index, columns=categories, values=category_values).reset_index()
+  dup_key="dup_" + "key" #(categories[0] if len(categories) > 0 else "None")
+  df_dup = df.assign(**{dup_key: df.groupby(index+categories, dropna=False).cumcount()})
+  return df_dup.pivot(index=index+[dup_key], columns=categories, values=category_values).reset_index()
 
 def munge(s: str):
   """Munges column names to ones the rest of the pipeline can handle.
@@ -75,7 +75,7 @@ def main():
 
   params = yaml.safe_load(args.params)
   nullify = set(params.get("nullify", []) or [])
-  na_rep = "" if len(nullify) == 0 else nullify[0]
+  na_rep = "" if len(nullify) == 0 else list(nullify)[0]
   seed = params.get("seed", None)
   schema = params.get("schema", {}) or {}
 
