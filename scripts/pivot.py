@@ -6,8 +6,19 @@ import yaml
 import pandas as pd
 import re
 import math
+import edn_format
+from functools import reduce
 from sklearn.utils import shuffle
 from typing import List
+
+def determine_schema_element(item, schema):
+  if type(item) is tuple:
+    ret = None
+    [ret := ret or determine_schema_element(i, schema) for i in item]
+    return ret
+  else:
+    s = schema.get(item, None)
+    return edn_format.Keyword(s) if s is not None else None
 
 def filter_frame(df: pd.DataFrame, filter_cutoff: float) -> pd.DataFrame:
   """Filter columns with low information value, as determined by `filter_cutoff`"""
@@ -39,19 +50,17 @@ def shrink(df: pd.DataFrame, datakey: str, size: float) -> pd.DataFrame:
   selected = subjects[0:math.floor(len(subjects)*size)]
   return df[df[datakey].isin(selected)]
 
-def write_csv(df: pd.DataFrame, name: str):
-  """Unused, makes 1%, 10%, 25%, and 100% cutoffs to a dataframe."""
-  helper = lambda df, name: df.set_axis([munge(str(c)) for c in df], axis=1).to_csv(name, index=False)
-  helper(df, f"{name}-100.csv")
-  helper(shrink(df, 0.25), f"{name}-25.csv")
-  helper(shrink(df, 0.10), f"{name}-10.csv")
-  helper(shrink(df, 0.01), f"{name}-1.csv")
-
 def main():
   parser = argparse.ArgumentParser(description="")
   parser.add_argument(
     "-o",
     "--output",
+    type=argparse.FileType("w+"),
+    default=sys.stdout,
+    metavar="PATH",
+    )
+  parser.add_argument(
+    "--schema-output",
     type=argparse.FileType("w+"),
     default=sys.stdout,
     metavar="PATH",
@@ -68,6 +77,7 @@ def main():
   nullify = set(params.get("nullify", []) or [])
   na_rep = "" if len(nullify) == 0 else nullify[0]
   seed = params.get("seed", None)
+  schema = params.get("schema", {}) or {}
 
   df = pd.read_csv(args.data, na_values=nullify) # dtype=str
   if "pivot" in params and params["pivot"] is not None:
@@ -88,8 +98,13 @@ def main():
         df = filter_frame(pivot(df, index, keys), filter_cutoff)
     if size and size_key:
       df = shrink(df, size_key, size)
+    args.schema_output.write(
+      edn_format.dumps({munge(str(c)): element
+                         for c in df if (element := determine_schema_element(c, schema)) is not None}))
     df.set_axis([munge(str(c)) for c in df], axis=1).to_csv(args.output, index=False, na_rep = na_rep)
   else:
+    args.schema_output.write(
+      edn_format.dumps({c: edn_format.Keyword(schema[c]) for c in schema}))
     df.to_csv(args.output, index=False, na_rep=na_rep)
 
 if __name__ == "__main__":

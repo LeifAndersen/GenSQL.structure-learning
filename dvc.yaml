@@ -6,6 +6,7 @@ stages:
       --data data/data.csv
       --params params.yaml
       --output data/pivoted.csv
+      --schema-output data/preschema.edn
     deps:
       - data/data.csv
       - scripts/pivot.py
@@ -15,6 +16,7 @@ stages:
       - nullify
     outs:
       - data/pivoted.csv
+      - data/preschema.edn
 
   subsample:
     cmd: >
@@ -57,6 +59,7 @@ stages:
   guess-schema:
     cmd: >
       clojure -X gensql.structure-learning.main/guess-schema
+      :preschema '"data/preschema.edn"'
       < data/nullified.csv
       > data/schema.edn
     deps:
