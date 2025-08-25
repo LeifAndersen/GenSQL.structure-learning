@@ -18,6 +18,7 @@
 # schema artifacts
 /cgpm-schema.edn
 /mapping-table.edn
+/preschema.edn
 /schema.edn
 
 # loom artifacts
