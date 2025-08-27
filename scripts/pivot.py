@@ -44,9 +44,9 @@ def munge(s: str):
   s = re.sub(r"[()\"']", "", s)
   return re.sub(r"[^0-9A-Za-z_]", "_", s)
 
-def shrink(df: pd.DataFrame, datakey: str, size: float) -> pd.DataFrame:
+def shrink(df: pd.DataFrame, datakey: str, size: float, seed) -> pd.DataFrame:
   """Subsample the dataframe, but keep `datakey` groups in tact."""
-  subjects = shuffle(df[datakey].unique())
+  subjects = shuffle(df[datakey].unique(), random_state=seed)
   selected = subjects[0:math.floor(len(subjects)*size)]
   return df[df[datakey].isin(selected)]
 
