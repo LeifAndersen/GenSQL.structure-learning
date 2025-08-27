@@ -97,7 +97,7 @@ def main():
       if len(keys) > 0:
         df = filter_frame(pivot(df, index, keys), filter_cutoff)
     if size and size_key:
-      df = shrink(df, size_key, size)
+      df = shrink(df, size_key, size, seed)
     args.schema_output.write(
       edn_format.dumps({munge(str(c)): element
                          for c in df if (element := determine_schema_element(c, schema)) is not None}))
