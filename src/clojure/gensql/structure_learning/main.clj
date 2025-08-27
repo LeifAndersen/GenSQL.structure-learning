@@ -42,7 +42,9 @@
                                             (map #(medley/remove-keys (set (keys params-schema)) %))))
                             (gensql.csv/heuristic-coerce-all)
                             (schema/guess default-stattype))
-        schema (merge ignore-all-schema guessed-schema pivoted-schema params-schema)]
+        schema (merge ignore-all-schema guessed-schema pivoted-schema 
+                ;;params-schema
+                )]
     (assert (not (every? #{:ignore} (vals schema)))
             "The statistical types of the columns in data.csv can't be guessed confidently.\nAll columns are ignored. Set statistical types manually in params.yaml to fix this")
     (schema/print-ignored schema)
