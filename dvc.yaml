@@ -200,6 +200,26 @@ stages:
     outs:
       - data/dep-prob.vl.json
 
+  dep-prob-vg:
+    cmd: >
+      pnpm vl2vg
+      < data/dep-prob.vl.json
+      > data/dep-prob.vg.json
+    deps:
+      - data/dep-prob.vl.json
+    outs:
+      - data/dep-prob.vg.json
+
+  dep-prob-svg:
+    cmd: >
+      pnpm vg2svg
+      < data/dep-prob.vg.json
+      > data/dep-prob.svg
+    deps:
+      - data/dep-prob.vg.json
+    outs:
+      - data/dep-prob.svg
+
   save-linear-stats:
     cmd: >
       python scripts/linear_stats.py

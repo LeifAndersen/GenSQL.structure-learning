@@ -168,8 +168,6 @@
   [& {:keys [default domain field name scheme stats-path sort-path]}]
   (assert (some? name))
   (assert (some? stats-path))
-  (println stats-path)
-  (println (slurp stats-path))
   (let [sm (cond-> (preserve-nan-as-keyword (slurp stats-path))
              true (json/read-str :value-fn handle-nan)
              field (update-stats #(get % field))
