@@ -178,7 +178,13 @@
                         (json/read-str :value-fn handle-nan)
                         (fill-missing 1.))
         base-spec {:$schema vega-lite-schema
-                   :data {:values (values {name sm})}}
+                   :data {:values (values {name sm})}
+                   :encoding {:x {:field "category"
+                                  :type "nominal"
+                                  :axis {:labelLimit 0}}
+                              :y {:field "category"
+                                  :type "nominal"
+                                  :axis {:labelLimit 0}}}}
         spec (medley/deep-merge base-spec
                                 (heatmap-spec name)
                                 (sort-spec (or sort-sm sm))
