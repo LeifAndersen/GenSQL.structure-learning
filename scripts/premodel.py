@@ -12,16 +12,18 @@ def predict(df_raw):
     categories = [i for i in df_raw if df_raw[i].dtype == "object"]
     nominal = [i for i in df_raw if df_raw[i].dtype != "object"]
 
-    enc = OneHotEncoder(sparse_output=False)
-    enc.fit(df_raw[categories])
-    df_temp = enc.transform(df_raw[categories])
-    df = pd.concat([df_raw[nominal], pd.DataFrame(columns=enc.get_feature_names_out(),
-                                                  data=df_temp)],
-                    axis=1)
+    #enc = OneHotEncoder(sparse_output=False)
+    #enc.fit(df_raw[categories])
+    #df_temp = enc.transform(df_raw[categories])
+    #df = pd.concat([df_raw[nominal], pd.DataFrame(columns=enc.get_feature_names_out(),
+    #                                              data=df_temp)],
+    #                axis=1)
+    df = pd.get_dummies(df_raw)
 
     clf = IsolationForest(n_estimators=10, warm_start=True)
     clf.fit(df)
-    km = KMeans().fit(df.dropna())
+    km = KMeans()
+    km.fit(df.dropna())
 
     return pd.concat([df, 
                       pd.DataFrame(km.labels_, columns=["Cluster"]),
