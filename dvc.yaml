@@ -18,6 +18,17 @@ stages:
       - data/pivoted.csv
       - data/preschema.edn
 
+  premodel:
+    cmd: >
+      python scripts/premodel.py
+      --data data/pivoted.csv
+      --output data/premodel.csv
+    deps:
+      - data/pivoted.csv
+      - scripts/pivot.py
+    outs:
+      - data/premodel.csv
+
   subsample:
     cmd: >
       mkdir -p data/test &&
