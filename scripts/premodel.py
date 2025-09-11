@@ -19,7 +19,7 @@ def predict(df_raw):
     #df = pd.concat([df_raw[nominal], pd.DataFrame(columns=enc.get_feature_names_out(),
     #                                              data=df_temp)],
     #                axis=1)
-    df = pd.get_dummies(df_raw).dropna()
+    df = pd.get_dummies(df_raw).dropna().reset_index()
 
     clf = IsolationForest(n_estimators=10, warm_start=True)
     clf.fit(df)
