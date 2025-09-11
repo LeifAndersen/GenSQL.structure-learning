@@ -7,6 +7,7 @@ import pandas as pd
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.ensemble import IsolationForest
+from sklearn.neighbors import LocalOutlierFactor
 
 def predict(df_raw):
     categories = [i for i in df_raw if df_raw[i].dtype == "object"]
@@ -18,16 +19,20 @@ def predict(df_raw):
     #df = pd.concat([df_raw[nominal], pd.DataFrame(columns=enc.get_feature_names_out(),
     #                                              data=df_temp)],
     #                axis=1)
-    df = pd.get_dummies(df_raw)
+    df = pd.get_dummies(df_raw).dropna()
 
     clf = IsolationForest(n_estimators=10, warm_start=True)
     clf.fit(df)
+    lof = LocalOutlierFactor()
     km = KMeans()
-    km.fit(df.dropna())
+    km.fit(df)
+
 
     return pd.concat([df, 
                       pd.DataFrame(km.labels_, columns=["Cluster"]),
-                      pd.DataFrame(clf.predict(df), columns=["Outlier"])],
+                      pd.DataFrame(clf.predict(df), columns=["IsolationForest"]),
+                      pd.DataFrame(lof.fit_predict(df), columns=["LocalOutliers"])
+                      ],
                      axis=1)
 
 def main():
