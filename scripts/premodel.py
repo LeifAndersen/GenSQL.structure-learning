@@ -2,6 +2,7 @@
 
 import argparse
 import sys
+import yaml
 
 import pandas as pd
 from sklearn.cluster import KMeans
@@ -9,7 +10,7 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn.ensemble import IsolationForest
 from sklearn.neighbors import LocalOutlierFactor
 
-def predict(df_raw):
+def predict(df_raw, seed):
     categories = [i for i in df_raw if df_raw[i].dtype == "object"]
     nominal = [i for i in df_raw if df_raw[i].dtype != "object"]
 
@@ -21,10 +22,10 @@ def predict(df_raw):
     #                axis=1)
     df = pd.get_dummies(df_raw).dropna().reset_index()
 
-    clf = IsolationForest(n_estimators=10, warm_start=True)
+    clf = IsolationForest(n_estimators=10, warm_start=True, random_state=seed)
     clf.fit(df)
-    lof = LocalOutlierFactor()
-    km = KMeans()
+    lof = LocalOutlierFactor(random_state=seed)
+    km = KMeans(random_state=seed)
     km.fit(df)
 
 
@@ -48,8 +49,11 @@ def main():
     parser.add_argument("--data", type=argparse.FileType("r"), help="Path to raw CSV.")
     args = parser.parse_args()
 
+    params = yaml.safe_load(args.params)
+    seed = params.get("seed", None)
+
     df_raw = pd.read_csv(args.data)
-    df = predict(df_raw)
+    df = predict(df_raw, seed)
     df.to_csv(args.output, index=False)
 
 if __name__ == "__main__":
