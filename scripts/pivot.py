@@ -11,6 +11,21 @@ from functools import reduce
 from sklearn.utils import shuffle
 from typing import List
 
+def pandas_to_gensql_types(type):
+  if type == "float64":
+    return "nominal" 
+  if type == "float32":
+    return "nominal" 
+  if type == "int64":
+    return "nominal" 
+  elif type == "object":
+    return "categorical"
+  else:
+    return "ignore"
+
+def schema_from_df(df, munge=False):
+  return {munge(str(k)) if munge else k: edn_format.Keyword(pandas_to_gensql_types(v)) for k, v in df.dtypes.astype('str').to_dict().items()} 
+
 def determine_schema_element(item, schema):
   if type(item) is tuple:
     ret = None
@@ -78,13 +93,16 @@ def main():
   na_rep = "" if len(nullify) == 0 else list(nullify)[0]
   seed = params.get("seed", None)
   schema = params.get("schema", {}) or {}
+  guess_schema = params.get("guess_schema", None)
 
   df = pd.read_csv(args.data, na_values=nullify) # dtype=str
+
   if "pivot" in params and params["pivot"] is not None:
 
     ignore = params["pivot"].get("ignore", []) or []
     df = df.drop(columns=ignore, errors='ignore')
 
+    # Remove low information rows
     filter_cutoff = params["pivot"].get("filter_cutoff", 0.75)
     size = params["pivot"].get("size", 1)
     size_key = params["pivot"].get("size_key", None)
@@ -96,15 +114,25 @@ def main():
         keys = [keys]
       if len(keys) > 0:
         df = filter_frame(pivot(df, index, keys), filter_cutoff)
+
+    # Shrink the data
     if size and size_key:
       df = shrink(df, size_key, size, seed)
+
+    # Guess the schema if we're doing it in the python step
+    guessed_schema = schema_from_df(df, True) if guess_schema else {}
+
     args.schema_output.write(
-      edn_format.dumps({munge(str(c)): element
-                         for c in df if (element := determine_schema_element(c, schema)) is not None}))
+      edn_format.dumps({**guessed_schema,
+                        **{munge(str(c)): element
+                           for c in df if (element := determine_schema_element(c, schema)) is not None}}))
     df.set_axis([munge(str(c)) for c in df], axis=1).to_csv(args.output, index=False, na_rep = na_rep)
   else:
+    guessed_schema = schema_from_df(df, False) if guess_schema else {}
+
     args.schema_output.write(
-      edn_format.dumps({c: edn_format.Keyword(schema[c]) for c in schema}))
+      edn_format.dumps({**guessed_schema,
+                        **{c: edn_format.Keyword(schema[c]) for c in schema}}))
     df.to_csv(args.output, index=False, na_rep=na_rep)
 
 if __name__ == "__main__":
