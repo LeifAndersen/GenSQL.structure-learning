@@ -17,6 +17,8 @@ nullify:
   # "missing" as null uncomment the following two lines:
   # - NaN
   # - missing
+guess_schema:
+  # One of python, clojure, or null, defaults to clojure
 schema:
   # Key/value pairs can be added here to explicitly override the inferred schema
   # for each column. The available types are as follows: numerical, nominal, and ignore.
