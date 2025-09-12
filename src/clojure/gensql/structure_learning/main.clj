@@ -39,7 +39,7 @@
         guessed-schema (->> csv
                             (sequence (comp (gensql.csv/as-maps)
                                             (map #(medley/remove-vals (every-pred string? string/blank?) %))
-                                            (map #(medley/remove-keys (set (keys params-schema)) %))))
+                                            (map #(medley/remove-keys (set (keys pivoted-schema)) %))))
                             (gensql.csv/heuristic-coerce-all)
                             (schema/guess default-stattype))
         schema (merge ignore-all-schema guessed-schema pivoted-schema 
