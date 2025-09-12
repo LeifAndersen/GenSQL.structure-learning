@@ -23,8 +23,8 @@ def pandas_to_gensql_types(type):
   else:
     return "ignore"
 
-def schema_from_df(df, munge=False):
-  return {munge(str(k)) if munge else k: edn_format.Keyword(pandas_to_gensql_types(v)) for k, v in df.dtypes.astype('str').to_dict().items()} 
+def schema_from_df(df, munge_keys=False):
+  return {munge(str(k)) if munge_keys else k: edn_format.Keyword(pandas_to_gensql_types(v)) for k, v in df.dtypes.astype('str').to_dict().items()} 
 
 def determine_schema_element(item, schema):
   if type(item) is tuple:
