@@ -30,21 +30,24 @@
   [{:keys [preschema]}]
   (let [params (dvc/yaml)
         params-schema (:schema params)
+        guess-type (get params :guess_schema "clojure")
         default-stattype (get params :default-stat-type  :ignore)
         csv (csv/read-csv *in*)
         ignore-all-schema (into {}
                                 (for [i (first csv)]
                                   [i :ignore]))
         pivoted-schema (edn/read-string (slurp preschema))
-        guessed-schema (->> csv
-                            (sequence (comp (gensql.csv/as-maps)
-                                            (map #(medley/remove-vals (every-pred string? string/blank?) %))
-                                            (map #(medley/remove-keys (set (keys pivoted-schema)) %))))
-                            (gensql.csv/heuristic-coerce-all)
-                            (schema/guess default-stattype))
-        schema (merge ignore-all-schema guessed-schema pivoted-schema 
-                ;;params-schema
-                )]
+        guessed-schema (if (= guess-type "python")
+                         {}
+                         (->> csv
+                              (sequence (comp (gensql.csv/as-maps)
+                                              (map #(medley/remove-vals (every-pred string? string/blank?) %))
+                                              (map #(medley/remove-keys (set (keys pivoted-schema)) %))))
+                              (gensql.csv/heuristic-coerce-all)
+                              (schema/guess default-stattype)))
+        schema (merge ignore-all-schema guessed-schema pivoted-schema
+                      ;;params-schema
+                      )]
     (assert (not (every? #{:ignore} (vals schema)))
             "The statistical types of the columns in data.csv can't be guessed confidently.\nAll columns are ignored. Set statistical types manually in params.yaml to fix this")
     (schema/print-ignored schema)
