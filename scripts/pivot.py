@@ -13,13 +13,13 @@ from typing import List
 
 def pandas_to_gensql_types(type):
   if type == "float64":
-    return "nominal" 
+    return "numerical" 
   if type == "float32":
-    return "nominal" 
+    return "numerical" 
   if type == "int64":
-    return "nominal" 
+    return "numerical" 
   elif type == "object":
-    return "categorical"
+    return "nominal"
   else:
     return "ignore"
 
