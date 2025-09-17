@@ -23,9 +23,12 @@ stages:
       python scripts/premodel.py
       --data data/pivoted.csv
       --output data/premodel.csv
+      --params params.yaml
     deps:
       - data/pivoted.csv
       - scripts/pivot.py
+    params:
+      - seed
     outs:
       - data/premodel.csv
 
@@ -74,6 +77,7 @@ stages:
       < data/nullified.csv
       > data/schema.edn
     deps:
+      - data/preschema.edn
       - data/nullified.csv
     params:
       - schema

@@ -47,6 +47,11 @@ def main():
         metavar="PATH",
     )
     parser.add_argument("--data", type=argparse.FileType("r"), help="Path to raw CSV.")
+    parser.add_argument(
+        "--params",
+        type=argparse.FileType("r"),
+        help="Path to params.yaml",
+    )
     args = parser.parse_args()
 
     params = yaml.safe_load(args.params)
