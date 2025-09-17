@@ -24,7 +24,7 @@ def predict(df_raw, seed):
 
     clf = IsolationForest(n_estimators=10, warm_start=True, random_state=seed)
     clf.fit(df)
-    lof = LocalOutlierFactor(random_state=seed)
+    lof = LocalOutlierFactor()
     km = KMeans(random_state=seed)
     km.fit(df)
 
