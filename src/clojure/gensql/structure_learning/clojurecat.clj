@@ -16,12 +16,13 @@
   "Merges the GPMs in a directory."
   [{path :models out :out}]
   (let [path (str path)
-        out (str out)]
-    (->> (io/file path)
-         (file-seq)
-         (filter #(.isFile %))
-         (map slurp)
-         (map gpm/read-string)
-         (ensemble/ensemble)
-         (pr-str)
-         (spit out))))
+        out (str out)
+        data (->> (io/file path)
+                  (file-seq)
+                  (filter #(.isFile %))
+                  (map slurp)
+                  (map gpm/read-string)
+                  (ensemble/ensemble))]
+    (with-open [writer (clojure.java.io/writer out)]
+      (binding [*out* writer]
+        (pr data)))))
