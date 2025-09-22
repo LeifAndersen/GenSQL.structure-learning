@@ -22,7 +22,9 @@
                   (filter #(.isFile %))
                   (map slurp)
                   (map gpm/read-string)
-                  (ensemble/ensemble))]
+                  ;; Its okay to call this constructor as we know there's at least 1 model
+                  ;;   _and_ its already a sequence.
+                  (ensemble/->Ensemble))]
     (with-open [writer (clojure.java.io/writer out)]
       (binding [*out* writer]
         (pr data)))))
