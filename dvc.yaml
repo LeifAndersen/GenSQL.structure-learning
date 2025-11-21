@@ -6,6 +6,7 @@ stages:
       --data data/data.csv
       --params params.yaml
       --output data/pivoted.csv
+      --full-output data/pivoted-full.csv
       --schema-output data/preschema.edn
     deps:
       - data/data.csv
@@ -17,6 +18,7 @@ stages:
     outs:
       - data/pivoted.csv
       - data/preschema.edn
+      - data/pivoted-full.csv
 
   premodel:
     cmd: >

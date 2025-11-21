@@ -75,6 +75,12 @@ def main():
     metavar="PATH",
     )
   parser.add_argument(
+    "--full-output",
+    type=argparse.FileType("w+"),
+    default=sys.stdout,
+    metavar="PATH",
+    )
+  parser.add_argument(
     "--schema-output",
     type=argparse.FileType("w+"),
     default=sys.stdout,
@@ -115,6 +121,9 @@ def main():
       if len(keys) > 0:
         df = filter_frame(pivot(df, index, keys), filter_cutoff)
 
+    ## Write the unshrunk pivoted CSV
+    df.set_axis([munge(str(c)) for c in df], axis=1).to_csv(args.full_output, index=False, na_rep = na_rep)
+
     # Shrink the data
     if size and size_key:
       df = shrink(df, size_key, size, seed)
@@ -134,6 +143,7 @@ def main():
       edn_format.dumps({**guessed_schema,
                         **{c: edn_format.Keyword(schema[c]) for c in schema}}))
     df.to_csv(args.output, index=False, na_rep=na_rep)
+    df.to_csv(args.full_output, index=False, na_rep=na_rep)
 
 if __name__ == "__main__":
   main()
